@@ -3,22 +3,34 @@ services:
   - docker
 
 before_install:
-  - docker build -t RamSinghAKG/react-test -f ./client/Dockerfile.dev ./client
-  # RamSinghAKG/react-test --> image name, it can be anything
+  - docker build -t ramsinghcg/react-test -f ./client/Dockerfile.dev ./client
+  # react-test --> image name, it can be anything, but ramsinghcg(docker id) name should be in small letter
   # ./client   ---> build context
 
 script:
-  - docker run RamSinghAKG/react-test npm test -- --coverage
+  - docker run ramsinghcg/react-test npm test -- --coverage
 
 after_success:
-  - docker build -t stephengrider/multi-client ./client
-  - docker build -t stephengrider/multi-nginx ./nginx
-  - docker build -t stephengrider/multi-server ./server
-  - docker build -t stephengrider/multi-worker ./worker
-  # Log in to the docker CLI
-  - echo "#DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker build -t ramsinghcg/multi-client ./client
+  - docker build -t ramsinghcg/multi-nginx ./nginx
+  - docker build -t ramsinghcg/multi-server ./server
+  - docker build -t ramsinghcg/multi-worker ./worker
+  # Log in to the docker CLI, my docker id = ramsinghcg
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
   # Take those images and push them to docker hub
-  - docker push RamSinghAKG/multi-client
-  - docker push RamSinghAKG/multi-nginx
-  - docker push RamSinghAKG/multi-server
-  - docker push RamSinghAKG/multi-worker
+  - docker push ramsinghcg/multi-client
+  - docker push ramsinghcg/multi-nginx
+  - docker push ramsinghcg/multi-server
+  - docker push ramsinghcg/multi-worker
+deploy:
+  provider: elasticbeanstalk
+  region: ap-south-1
+  app: multi-docker
+  env: MultiDocker-env
+  bucket_name: elasticbeanstalk-ap-south-1-528716534830
+  bucket_path: docker-multi
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key:
+    secure: $AWS_SECRET_KEY
